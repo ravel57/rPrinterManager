@@ -1,0 +1,62 @@
+﻿<Window x:Class="rPrinterManager.NewPrinterDriverWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:rPrinterManager"
+        mc:Ignorable="d"
+        Title="NewPrinterDriverWindow" Height="449" Width="636">
+    <Grid Margin="10">
+        <StackPanel>
+            <TabPanel>
+                <ListBox 
+                    Height="120" 
+                    Width="100"
+                    x:Name="printerInfFiles_lb" 
+                    SelectionChanged="printerInfFiles_lb_SelectionChanged"
+                />
+                <ListBox
+                    Height="120"
+                    Width="100"
+                    x:Name="printerIssuers_lb"
+                    SelectionChanged="printerIssuers_lb_SelectionChanged"
+                />
+                <ListBox
+                    Height="120"
+                    x:Name="printerDrivers_lb"
+                    Margin="0,0,-172,0" 
+                    SelectionChanged="printerDrivers_lb_SelectionChanged"
+                />
+
+            </TabPanel>
+
+            <Label Content="driverInfFile"/>
+            <TabPanel>
+                <TextBox  
+                    Width="250"
+                    TextWrapping="Wrap"
+                />
+                <Button
+                    x:Name="browseInfFile_btn"
+                    Width="40" Click="browseInfFile_btn_Click"
+                />
+            </TabPanel>
+
+            <Label Content="driverFullName"/>
+            <TextBox 
+                TextWrapping="Wrap" 
+            />
+
+            <Label Content="driverShortName"/>
+            <TextBox 
+                TextWrapping="Wrap"
+            />
+
+            <Label Content="defaultName"/>
+            <TextBox 
+                TextWrapping="Wrap" 
+            />
+
+        </StackPanel>
+    </Grid>
+</Window>
