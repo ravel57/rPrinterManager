@@ -1,5 +1,6 @@
 ﻿using InfHelper;
 using InfHelper.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,30 +13,48 @@ using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace rPrinterManager {
-	public class Computer {
+	public static class Computer {
 
-		public BindingList<Printer> printers { get; private set; }
-		public List<PrinterModel> printerModels = new List<PrinterModel>();
-		private ManagementScope managementScope = null;
+		private static ManagementScope managementScope = null;
+		private static string printerModelsFile = "printerModelsFile.json";
 
-		public Computer(string computerName) {
-			string driverpath = @"\\rmfs01\Distro\Drivers\Printers";
-			printerModels.Add(new PrinterModel("HP 425", "HP LaserJet MFP M425", "HP LaserJet 400 MFP M425 PCL 6", driverpath + @"\HP\LJPro-MFP-M425_driver_only_15188_1\hpcm425u.inf"));
-			printerModels.Add(new PrinterModel("HP 426", "HP LaserJet Pro MFP M426f", "HP LaserJet Pro MFP M426-M427 PCL 6", driverpath + @"\HP\HP_LJ_Pro_MFP_M426\hpma532a_x64.inf"));
-			printerModels.Add(new PrinterModel("HP 428", "HP LaserJet M428f", "HP LaserJet Pro M428f-M429f PCL-6 (V4)", driverpath + @"\HP\HP 428\HPeSCLScan.INF"));
-			printerModels.Add(new PrinterModel("RICOH 2011", "RICOH MP C2011", "RICOH MP C2011 PCL 6", driverpath + @"\Ricoh\MP C2011\disk1\OEMSETUP.INF"));
-			printerModels.Add(new PrinterModel("RICOH 2000", "RICOH MP C2000", "RICOH PCL6 V4 UniversalDriver V4.12", driverpath + @"\Ricoh\2000\disk1\r4600.inf"));
-			
+		public static BindingList<Printer> printers { get; private set; }
+		public static List<PrinterModel> printerModels = new List<PrinterModel>();
+
+		//public Computer(string computerName) {
+		//	string printerModelsStr = File.ReadAllText(printerModelsFile);
+		//	printerModels = JsonConvert.DeserializeObject<List<PrinterModel>>(printerModelsStr);
+		//	CreateManagementScope(computerName);
+		//	updatePrinters();
+		//}
+
+		public static void init(string computerName) {
+			try {
+				string printerModelsStr = File.ReadAllText(printerModelsFile);
+				printerModels = JsonConvert.DeserializeObject<List<PrinterModel>>(printerModelsStr);
+			} catch (FileNotFoundException ex) {
+			} catch (Exception ex) {
+				MessageBox.Show(ex.Message);
+			}
 			CreateManagementScope(computerName);
 			updatePrinters();
 		}
 
-		public void addPrinter(string driverName, string ip, string name) {
-			Printer printer = new Printer(ip, name, printerModels.First(p => p.driverShortName == driverName), managementScope);
+		public static void addPrinter(string driverName, string ip, string name) {
+			Printer printer = new Printer(ip, name, 
+											printerModels.First(p => p.driverShortName == driverName), 
+											managementScope);
 			printer.InstallPrinterWMI();
-
-
+			updatePrinters();
 		}
+
+		public static void editPrinter(Printer printer, string newName) {
+			//Printer printer = new Printer(ip, name, 
+			//								printerModels.First(p => p.driverShortName == driverName), 
+			//								managementScope);
+			//printer.InstallPrinterWMI();
+		}
+
 
 		public static bool IsValidateIP(string address) {
 			string Pattern = @"^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}$";
@@ -70,7 +89,7 @@ namespace rPrinterManager {
 			}
 		}
 
-		private void CreateManagementScope(string computerName) {
+		private static void CreateManagementScope(string computerName) {
 			var wmiConnectionOptions = new ConnectionOptions();
 			wmiConnectionOptions.Impersonation = ImpersonationLevel.Impersonate;
 			wmiConnectionOptions.Authentication = AuthenticationLevel.Default;
@@ -82,7 +101,7 @@ namespace rPrinterManager {
 			managementScope.Connect();
 		}
 
-		public void updatePrinters() {
+		private static void updatePrinters() {
 			ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_Printer");
 			ManagementObjectSearcher searcher = new ManagementObjectSearcher(managementScope, query);
 			var searcherResult = searcher.Get();
@@ -100,7 +119,13 @@ namespace rPrinterManager {
 			}
 		}
 
+		public static void AddPrinterModels(PrinterModel printerModel) {
+			printerModels.Add(printerModel);
+		}
 
+		public static void savePrinterModels() {
+			File.WriteAllText(printerModelsFile, JsonConvert.SerializeObject(printerModels));
+		}
 
 	}
 }

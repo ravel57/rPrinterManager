@@ -10,10 +10,14 @@ using System.Windows;
 namespace rPrinterManager {
 
 	public class Printer /*: INotifyPropertyChanged*/ {
+
+
+		private ManagementScope managementScope = null;
+
 		public string ip { get; set; }
 		public string name { get; set; }
 		public PrinterModel printerModel { get; set; }
-		private ManagementScope managementScope = null;
+		public bool marked = false;
 
 		//public event PropertyChangedEventHandler PropertyChanged;
 		//protected virtual void onPropertyChanged(string propertyName = "") {
@@ -46,9 +50,9 @@ namespace rPrinterManager {
 		}
 
 		private bool CreatePrinterPort() {
-			if (CheckPrinterPort())
+			if (CheckPrinterPort()) {
 				return true;
-
+			}
 			var printerPortClass = new ManagementClass(managementScope, new ManagementPath("Win32_TCPIPPrinterPort"), new ObjectGetOptions());
 			printerPortClass.Get();
 			var newPrinterPort = printerPortClass.CreateInstance();
@@ -112,7 +116,9 @@ namespace rPrinterManager {
 		}
 
 		private bool CreatePrinter() {
-			var printerClass = new ManagementClass(managementScope, new ManagementPath("Win32_Printer"), new ObjectGetOptions());
+			var printerClass = new ManagementClass(managementScope,
+												   new ManagementPath("Win32_Printer"), 
+												   new ObjectGetOptions());
 			printerClass.Get();
 			var printer = printerClass.CreateInstance();
 			printer.SetPropertyValue("DriverName", printerModel.driverFullName);
@@ -142,5 +148,19 @@ namespace rPrinterManager {
 				MessageBox.Show("An error occurred while trying to execute the WMI method: " + err.Message);
 			}
 		}
+
+		public void unmapPrinter() {
+			ConnectionOptions options = new ConnectionOptions();
+			options.EnablePrivileges = true;
+			ManagementScope scope = new ManagementScope(ManagementPath.DefaultPath, options);
+			scope.Connect();
+
+			ManagementClass win32Printer = new ManagementClass("Win32_Printer");
+			ManagementObjectCollection printers = win32Printer.GetInstances();
+			foreach (ManagementObject printer in printers) {
+				printer.Delete();
+			}
+		}
+
 	}
 }

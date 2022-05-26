@@ -5,58 +5,75 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:rPrinterManager"
         mc:Ignorable="d"
-        Title="NewPrinterDriverWindow" Height="449" Width="636">
-    <Grid Margin="10">
-        <StackPanel>
-            <TabPanel>
+        Title="NewPrinterDriverWindow" Height="449" Width="500">
+    <Grid Margin="10,10,10,10">
+        <StackPanel Margin="0,0,0,0">
+            <TabPanel Margin="0,0,0,0">
                 <ListBox 
                     Height="120" 
-                    Width="100"
-                    x:Name="printerInfFiles_lb" 
-                    SelectionChanged="printerInfFiles_lb_SelectionChanged"
+                    MinWidth="100"
+                    x:Name="printerInfFiles_listBox" 
+                    SelectionChanged="printerInfFiles_listBox_SelectionChanged" 
                 />
                 <ListBox
                     Height="120"
-                    Width="100"
-                    x:Name="printerIssuers_lb"
-                    SelectionChanged="printerIssuers_lb_SelectionChanged"
+                    MinWidth="100"
+                    x:Name="printerIssuers_listBox"
+                    SelectionChanged="printerIssuers_listBox_SelectionChanged"
                 />
                 <ListBox
                     Height="120"
-                    x:Name="printerDrivers_lb"
-                    Margin="0,0,-172,0" 
-                    SelectionChanged="printerDrivers_lb_SelectionChanged"
+                    MinWidth="200"
+                    x:Name="printerDrivers_listBox"
+                    SelectionChanged="printerDrivers_listBox_SelectionChanged"
                 />
-
             </TabPanel>
 
-            <Label Content="driverInfFile"/>
-            <TabPanel>
+            <Label Content="Путь к файлу"/>
+            <DockPanel>
                 <TextBox  
-                    Width="250"
+                    x:Name="driverInfFilePath_textBox"
+                    IsReadOnly="True"
+                    Foreground="Gray"
+                    HorizontalAlignment="Right"
                     TextWrapping="Wrap"
                 />
                 <Button
                     x:Name="browseInfFile_btn"
-                    Width="40" Click="browseInfFile_btn_Click"
+                    Width="60" 
+                    HorizontalAlignment="Left"
+                    Margin="5,0,0,0"
+                    Click="browseInfFile_btn_Click" Content="Открыть"
                 />
-            </TabPanel>
+            </DockPanel>
 
-            <Label Content="driverFullName"/>
+            <Label Content="Полное имя драйвера"/>
             <TextBox 
+                x:Name="driverFullName_textBox"
+                IsReadOnly="True"
+                Foreground="Gray"
                 TextWrapping="Wrap" 
             />
 
-            <Label Content="driverShortName"/>
+            <Label Content="Короткое название в списке"/>
             <TextBox 
+                x:Name="driverShortName_textBox"
                 TextWrapping="Wrap"
             />
 
-            <Label Content="defaultName"/>
+            <Label Content="Стандартное имя при добавлении"/>
             <TextBox 
+                x:Name="driverDefaultName_textBox"
                 TextWrapping="Wrap" 
             />
 
+            <Button x:Name="addPrinter_button" 
+                    Click="addPrinter_button_Click"
+                    Content="Добавить"
+                    Margin="100,15"
+                    Height="30"
+                    IsEnabled="False"
+            />
         </StackPanel>
     </Grid>
 </Window>

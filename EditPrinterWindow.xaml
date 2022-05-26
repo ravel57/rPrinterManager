@@ -16,7 +16,7 @@
             <Label FontSize="12" Content="Принтер"/>
             <TabPanel>
                 <ComboBox 
-                    x:Name="driverList_cb" 
+                    x:Name="driverList_comboBox" 
                     SelectionChanged="driverList_cb_SelectionChanged" 
                     Width="210"
                 />

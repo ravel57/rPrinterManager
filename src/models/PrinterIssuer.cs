@@ -5,18 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace rPrinterManager.src {
-	class PrinterIssuer {
+	public class PrinterIssuer {
 
 		public string issuer;
-		public List<PrinterModel> printerModels;
+		public List<PrinterModel> printerModels = new List<PrinterModel>();
+
+		public override string ToString() => issuer;
 
 		public PrinterIssuer(string issuer) {
 			this.issuer = issuer;
-			printerModels = new List<PrinterModel>();
-		}
-
-		public override string ToString() {
-			return issuer;
 		}
 
 	}

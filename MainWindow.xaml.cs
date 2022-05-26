@@ -14,6 +14,7 @@ using System.Windows.Shapes;
 using System.ComponentModel;
 using System.Net.NetworkInformation;
 using System.Data;
+using System.IO;
 
 namespace rPrinterManager {
 	/// <summary>
@@ -21,7 +22,7 @@ namespace rPrinterManager {
 	/// </summary>
 	public partial class MainWindow : Window {
 
-		private Computer computer;
+		//private Computer computer;
 		//private BindingList<Printer> printers;
 
 		//private enum ScanComputerType : int {
@@ -36,15 +37,18 @@ namespace rPrinterManager {
 		}
 
 		private void Window_Loaded(object sender, RoutedEventArgs e) {
-			//var a = Environment.GetCommandLineArgs();
-			if (Environment.GetCommandLineArgs().Count() > 1) {
-				remoteComputerName.Text = Environment.GetCommandLineArgs()[1];
-				setRemote();
-			} else {
-				setLocal();
+			try {
+				Directory.SetCurrentDirectory(Directory.GetParent(Environment.GetCommandLineArgs()[0]).FullName);
+				if (Environment.GetCommandLineArgs().Count() > 1) {
+					remoteComputerName.Text = Environment.GetCommandLineArgs()[1];
+					setRemote();
+				} else {
+					setLocal();
+				}
+				//Computer.printers.ListChanged += Printers_ListChanged;
+			} catch (Exception ex) {
+				MessageBox.Show(ex.Message);
 			}
-			printers_dg.ItemsSource = computer.printers;
-			computer.printers.ListChanged += Printers_ListChanged;
 		}
 
 
@@ -53,8 +57,9 @@ namespace rPrinterManager {
 		private void setLocal() {
 			localComputer_rb.IsChecked = true;
 			//scanComputerType = ScanComputerType.local;
-			computer = new Computer("localhost");
-			printers_dg.ItemsSource = computer.printers;
+			//computer = new Computer("localhost");
+			Computer.init("localhost");
+			printers_dg.ItemsSource = Computer.printers;
 		}
 
 		private void localCompute_RadioButton_Checked(object sender, RoutedEventArgs e) {
@@ -65,8 +70,9 @@ namespace rPrinterManager {
 		private void setRemote() {
 			remoteComputer_rb.IsChecked = true;
 			if (!string.IsNullOrEmpty(remoteComputerName.Text) && Computer.ping(remoteComputerName.Text)) {
-				computer = new Computer(remoteComputerName.Text);
-				printers_dg.ItemsSource = computer.printers;
+				//computer = new Computer(remoteComputerName.Text);
+				Computer.init(remoteComputerName.Text);
+				printers_dg.ItemsSource = Computer.printers;
 			}
 			//scanComputerType = ScanComputerType.remote;
 		}
@@ -75,7 +81,7 @@ namespace rPrinterManager {
 			setRemote();
 		}
 
-		private void remoteComputer_rb_Checked(object sender, RoutedEventArgs e) {
+		private void remoteComputer_radioButton_Checked(object sender, RoutedEventArgs e) {
 			setRemote();
 		}
 		private void remoteComputerName_PreviewMouseDown(object sender, MouseButtonEventArgs e) {
@@ -107,8 +113,9 @@ namespace rPrinterManager {
 		}
 
 		private void newPrinter_btn_Click(object sender, RoutedEventArgs e) {
-			EditPrinterWindow editPrinterWindow = new EditPrinterWindow(computer);
-			editPrinterWindow.Show();
+			EditPrinterWindow editPrinterWindow = new EditPrinterWindow(/*computer*/);
+			editPrinterWindow.ShowDialog();
+			printers_dg.ItemsSource = Computer.printers;
 		}
 
 
@@ -125,9 +132,12 @@ namespace rPrinterManager {
 		}
 
 		private void HiddenEditButton_Click(object sender, RoutedEventArgs e) {
-			EditPrinterWindow editPrinterWindow = new EditPrinterWindow(computer, ((Button)e.Source).DataContext as Printer);
+			EditPrinterWindow editPrinterWindow = new EditPrinterWindow(/*computer,*/ ((Button)e.Source).DataContext as Printer);
 			editPrinterWindow.Show();
 		}
 
+		private void deletePrinter_btn_Click(object sender, RoutedEventArgs e) {
+
+		}
 	}
 }

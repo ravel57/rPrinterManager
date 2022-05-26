@@ -23,81 +23,82 @@ namespace rPrinterManager {
 	/// </summary>
 	public partial class NewPrinterDriverWindow : Window {
 
-		private string path;
-		List<PrinterIssuer> printerIssuers = new List<PrinterIssuer>();
-
+		//List<PrinterIssuer> printerIssuers = new List<PrinterIssuer>();
+		private List<InfFile> infFiles = new List<InfFile>();
+		private InfFile selectedInfFile;
+		private PrinterIssuer selectedPrinterIssuers;
+		private PrinterModel selectedPrinterModel;
 
 		public NewPrinterDriverWindow() {
 			InitializeComponent();
-		}
-
-		void checkPrinterFromFolder() {
-			var helper = new InfUtil();
-			List<string> driversNames = null;
-			string[] files = Directory.GetFiles(path, "*.inf");
-			printerInfFiles_lb.Items.Clear();
-			printerIssuers_lb.Items.Clear();
-			//string aaa = file.Remove(0, path.Length + 1);
-			foreach (string file in files) {
-				InfData data = helper.ParseFile(file);
-				var infVerson = data["Version"];
-				var infVersonClass = infVerson["Class"];
-				if (infVersonClass.PrimitiveValue != "Printer") {
-					continue;
-				}
-				var infVersonManufacturer = data["Manufacturer"];
-				for (int i = 0; i < infVersonManufacturer.Keys.Count; i++) {
-					var infPrinterIssuer = infVersonManufacturer.Keys[i];
-					string toFind = infPrinterIssuer.KeyValues[0].Value + '.' + infPrinterIssuer.KeyValues[1].Value;
-					if (infVerson["Provider"].PrimitiveValue == "%OEM%") {
-						string toFindInStrings = data.Categories.First(el => el.Name == toFind).Keys[0].Id.Replace("%", "");
-						var infStrings = data["Strings"];
-						driversNames = infStrings.Keys.Where(el => el.Id.StartsWith(toFindInStrings)).Select(el => el.KeyValues[0].Value).ToList();
-					} else {
-						driversNames = data[toFind].Keys.Select(el => el.KeyValues[0].Value).ToList();
-					}
-					PrinterIssuer printerIssuer = new PrinterIssuer(infPrinterIssuer.KeyValues[0].Value);
-					foreach (var driver in driversNames) {
-						printerIssuer.printerModels.Add(new PrinterModel(driver, driver, driver, file));
-					}
-					printerIssuer.printerModels.Sort((x, y) => x.driverFullName.CompareTo(y.driverFullName));
-					printerIssuer.printerModels = printerIssuer.printerModels.GroupBy(x => x.driverFullName).Select(x => x.First()).ToList();
-					printerIssuers.Add(printerIssuer);
-				}
-				//	if (printerIssuer.printerModels.Count > 0) {
-				//		printerInfFiles_lb.Items.Add(file.Remove(0, path.Length + 1));
-				//		printerIssuers_lb.Items.Add(infPrinterIssuer.KeyValues[0].Value);
-				//		printerDrivers_lb.ItemsSource = printerIssuer.printerModels.Select(el => el.driverFullName).ToList();
-				//	}
-			}
-			if (printerIssuers.Count > 1)
-				printerIssuers_lb.ItemsSource = printerIssuers.Select(el => el.issuer).ToList();
-			else
-				printerIssuers_lb.Items.Clear();
-			printerIssuers_lb.SelectedIndex = 0;
-
+			browseInfFile_btn_Click(new object(), new RoutedEventArgs());
 		}
 
 		private void browseInfFile_btn_Click(object sender, RoutedEventArgs e) {
 			OpenFileDialog openFileDialog = new OpenFileDialog();
 			openFileDialog.Filter = "INF files (*.inf)|*.inf";
 			if (openFileDialog.ShowDialog() == true) {
-				this.path = Directory.GetParent(System.IO.Path.GetFullPath(openFileDialog.FileName)).FullName + '\\';
-				checkPrinterFromFolder();
+				string path = Directory.GetParent(System.IO.Path.GetFullPath(openFileDialog.FileName)).FullName + '\\';
+				infFiles = Directory.GetFiles(path, "*.inf").Select(el => new InfFile(el)).ToList();
+				foreach (InfFile infFile in infFiles) {
+					NetworkPrinterInf inf = new NetworkPrinterInf(infFile.path);
+					if (inf.classIsPrinter && inf.printerIssuers.Sum(el => el.printerModels.Count) > 0)
+						infFile.printerIssuers.AddRange(inf.printerIssuers);
+				}
+				infFiles = infFiles.Where(el => el.printerIssuers.Count > 0).ToList();
+				if (infFiles.Count > 0) {
+					printerInfFiles_listBox.ItemsSource = infFiles.Select(el => el.path.Replace(path, ""));
+					printerInfFiles_listBox.SelectedIndex = 0;
+				} else {
+					printerIssuers_listBox.ItemsSource = new List<string>();
+				}
 			}
 		}
 
-		private void printerInfFiles_lb_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-
+		private void printerInfFiles_listBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			if (printerInfFiles_listBox.SelectedIndex >= 0) {
+				selectedInfFile = infFiles[printerInfFiles_listBox.SelectedIndex];
+				printerIssuers_listBox.ItemsSource = selectedInfFile.printerIssuers.Select(el => el.issuer).ToList();
+				printerIssuers_listBox.SelectedIndex = 0;
+				printerIssuers_listBox_SelectionChanged();
+			}
 		}
 
-		private void printerIssuers_lb_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-
+		private void printerIssuers_listBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			printerIssuers_listBox_SelectionChanged();
 		}
 
-		private void printerDrivers_lb_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-
+		private void printerIssuers_listBox_SelectionChanged() {
+			if (printerIssuers_listBox.SelectedIndex >= 0) {
+				selectedPrinterIssuers = selectedInfFile.printerIssuers[printerIssuers_listBox.SelectedIndex];
+				printerDrivers_listBox.ItemsSource = selectedPrinterIssuers.printerModels.Select(el => el.driverFullName).ToList();
+				printerDrivers_listBox.SelectedIndex = 0;
+				printerDrivers_listBox_SelectionChanged();
+			}
 		}
 
+		private void printerDrivers_listBox_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+			printerDrivers_listBox_SelectionChanged();
+		}
+
+		private void printerDrivers_listBox_SelectionChanged() {
+			if (printerDrivers_listBox.SelectedIndex >= 0) {
+				selectedPrinterModel = selectedPrinterIssuers.printerModels[printerDrivers_listBox.SelectedIndex];
+				driverFullName_textBox.Text = selectedPrinterModel.driverFullName;
+				driverShortName_textBox.Text = selectedPrinterModel.driverShortName;
+				driverDefaultName_textBox.Text = selectedPrinterModel.defaultName;
+				driverInfFilePath_textBox.Text = selectedPrinterModel.driverInfFilePath;
+				addPrinter_button.IsEnabled = true;
+			}
+		}
+
+		private void addPrinter_button_Click(object sender, RoutedEventArgs e) {
+			Computer.AddPrinterModels(new PrinterModel(driverShortName_textBox.Text, 
+														driverDefaultName_textBox.Text, 
+														driverFullName_textBox.Text,
+														driverInfFilePath_textBox.Text));
+			Computer.savePrinterModels();
+			Close();
+		}
 	}
 }

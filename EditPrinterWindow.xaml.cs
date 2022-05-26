@@ -26,31 +26,28 @@ namespace rPrinterManager {
 		//List<Printer.PrinterModel> printerModels = new List<Printer.PrinterModel>();
 		//private string selectedDriver;
 
-		private Computer computer;
 		private Printer printer;
-		public EditPrinterWindow(Computer computer) {
+		public EditPrinterWindow() {
 			InitializeComponent();
 			this.addPrinter_b.Content = "Добавить";
-			this.computer = computer;
 			printerIP.Text = getLocalIpSubNetwork();
-			driverList_cb.ItemsSource = getDriverNames();
+			driverList_comboBox.ItemsSource = getDriverNames();
 		}
-		public EditPrinterWindow(Computer computer, Printer printer) {
+		public EditPrinterWindow(Printer printer) {
 			InitializeComponent();
 			this.addPrinter_b.Content = "Изменить";
-			this.computer = computer;
 			this.printer = printer;
-			driverList_cb.ItemsSource = getDriverNames();
-			this.driverList_cb.SelectedItem = printer.printerModel.driverShortName;
+			driverList_comboBox.ItemsSource = getDriverNames();
+			this.driverList_comboBox.SelectedItem = printer.printerModel.driverShortName;
 			//driverList_cb.ItemsSource = new List<string>().Add(printer.printerModel.driverName);
-			this.driverList_cb.IsEnabled = false;
+			this.driverList_comboBox.IsEnabled = false;
 			this.printerIP.Text = printer.ip;
 			this.printerName_tb.Text = printer.name;
 			//driverList_cb.ItemsSource = computer.printerModels.First();
 		}
 
 		List<string> getDriverNames() {
-			return computer.printerModels.Select(o => o.driverShortName).ToList();
+			return Computer.printerModels.Select(o => o.driverShortName).ToList();
 		}
 
 		string getLocalIpSubNetwork() {
@@ -88,15 +85,15 @@ namespace rPrinterManager {
 						if (hostName != null && title != null) {
 							string driverName = "";
 							if (hostName.StartsWith("RNP") & title == "Web Image Monitor")
-								driverName = computer.printerModels.First(p => p.driverShortName.Contains("RICOH")).driverShortName;
+								driverName = Computer.printerModels.First(p => p.driverShortName.Contains("RICOH")).driverShortName;
 							if (hostName.StartsWith("HP") & title == "")
-								driverName = computer.printerModels.First(p => p.driverShortName.Contains("HP 428")).driverShortName;
+								driverName = Computer.printerModels.First(p => p.driverShortName.Contains("HP 428")).driverShortName;
 							if (title.Contains("HP LaserJet MFP M426fdn"))
-								driverName = computer.printerModels.First(p => p.driverShortName.Contains("HP 426")).driverShortName;
+								driverName = Computer.printerModels.First(p => p.driverShortName.Contains("HP 426")).driverShortName;
 							if (title.Contains("HP LaserJet 400 MFP M425"))
-								driverName = computer.printerModels.First(p => p.driverShortName.Contains("HP 425")).driverShortName;
+								driverName = Computer.printerModels.First(p => p.driverShortName.Contains("HP 425")).driverShortName;
 							//if (driverList_cb.Dispatcher.CheckAccess()) driverList_cb.SelectedItem = driverName; else
-							driverList_cb.Dispatcher.Invoke(() => { driverList_cb.SelectedItem = driverName; });
+							driverList_comboBox.Dispatcher.Invoke(() => { driverList_comboBox.SelectedItem = driverName; });
 						}
 					} catch (Exception e) { }
 				});
@@ -108,24 +105,27 @@ namespace rPrinterManager {
 
 
 		private void driverList_cb_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-			printerName_tb.Text = computer.printerModels
+			printerName_tb.Text = Computer.printerModels
 				.First(printe => printe.driverShortName == e.AddedItems[0].ToString())
 				.defaultName;
 		}
 
-		private void Button_Click(object sender, RoutedEventArgs e) {
-
-		}
-
 		private void addPrinter_b_Click(object sender, RoutedEventArgs e) {
-			computer.addPrinter(driverList_cb.SelectedItem.ToString(), printerIP.Text, printerName_tb.Text);
-			computer.updatePrinters();
+			if (printer == null) {
+				Computer.addPrinter(driverList_comboBox.SelectedItem.ToString(),
+									printerIP.Text, 
+									printerName_tb.Text);
+			} else {
+				Computer.editPrinter(printer, printerName_tb.Text);
+			}
+			//Computer.updatePrinters();
 			this.Close();
 		}
 
 		private void addDriver_btn_Click(object sender, RoutedEventArgs e) {
 			NewPrinterDriverWindow newPrinterDriverWindow = new NewPrinterDriverWindow();
-			newPrinterDriverWindow.Show();
+			newPrinterDriverWindow.ShowDialog();
+			driverList_comboBox.ItemsSource = getDriverNames();
 		}
 	}
 }
